@@ -88,7 +88,9 @@ if command -v xdg-open >/dev/null 2>&1 && command -v xdg-mime >/dev/null 2>&1; t
   mkdir -p "$work/protocol-config"
   XDG_CONFIG_HOME="$work/protocol-config" XDG_DATA_HOME="$work/standard/share" \
     xdg-mime default zapfast.desktop x-scheme-handler/whatsapp
-  ZAPFAST_TEST_ARGS="$work/xdg-args" XDG_CURRENT_DESKTOP=Hyprland \
+  # xdg-open only tries desktop MIME handlers when a display is declared.
+  # The fake executable needs no display server, including on headless CI.
+  DISPLAY=:0 ZAPFAST_TEST_ARGS="$work/xdg-args" XDG_CURRENT_DESKTOP=Hyprland \
     XDG_CONFIG_HOME="$work/protocol-config" XDG_DATA_HOME="$work/standard/share" \
     xdg-open "$uri"
   [[ $(cat "$work/xdg-args") == "$uri" ]] || {
