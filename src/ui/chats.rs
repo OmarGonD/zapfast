@@ -449,23 +449,6 @@ fn filter_chips(app: &mut App, ui: &mut egui::Ui) {
                         app.actions.push(Action::SetChatFilter(next));
                     }
                 }
-                if app.archived_count() > 0 || app.show_archived {
-                    let selected = app.show_archived;
-                    let chip = widgets::filter_chip(
-                        ui,
-                        &palette,
-                        crate::i18n::gettext(app.locale, "Archived").as_ref(),
-                        app.archived_unread(),
-                        selected,
-                    )
-                    .tab_stop(Stop::Archived);
-                    ui.ctx().data_mut(|data| {
-                        data.insert_temp(egui::Id::new("archived-chip"), chip.rect);
-                    });
-                    if chip.clicked() {
-                        app.actions.push(Action::ShowArchived(!selected));
-                    }
-                }
                 if app.locked_count() > 0 || app.locked_folder_open() {
                     let selected = app.locked_folder_open();
                     let chip = widgets::filter_chip(
@@ -515,6 +498,9 @@ fn list(app: &mut App, ui: &mut egui::Ui) {
     if !app.search.trim().is_empty() {
         results(app, ui);
         return;
+    }
+    if !app.show_archived && app.archived_count() > 0 {
+        archived_entry(app, ui);
     }
     let chats: Vec<Chat> = app.visible_chats().into_iter().cloned().collect();
     if chats.is_empty() {
@@ -647,6 +633,43 @@ fn shared_offset_id() -> egui::Id {
 #[cfg(test)]
 pub(crate) fn list_offset_id() -> egui::Id {
     egui::Id::new("chat-list-offset")
+}
+
+/// Always-visible access to archived chats above the normal chat list.
+fn archived_entry(app: &mut App, ui: &mut egui::Ui) {
+    let palette = app.palette;
+    let (rect, response) = ui.allocate_exact_size(vec2(ui.available_width(), 52.0), Sense::click());
+    let response = response.tab_stop(Stop::Archived);
+    ui.ctx().data_mut(|data| {
+        data.insert_temp(egui::Id::new("archived-chip"), rect);
+    });
+    if response.hovered() {
+        widgets::row_highlight(ui, &palette, rect, palette.surface_hover);
+    }
+    Icon::Archive.image(palette.accent, 22.0).paint_at(
+        ui,
+        Rect::from_center_size(pos2(rect.left() + 38.0, rect.center().y), Vec2::splat(22.0)),
+    );
+    ui.painter().text(
+        pos2(rect.left() + 76.0, rect.center().y),
+        egui::Align2::LEFT_CENTER,
+        crate::i18n::gettext(app.locale, "Archived"),
+        theme::medium(14.5),
+        palette.text,
+    );
+    ui.painter().text(
+        pos2(rect.right() - 16.0, rect.center().y),
+        egui::Align2::RIGHT_CENTER,
+        app.archived_count().to_string(),
+        theme::regular(12.5),
+        palette.accent,
+    );
+    if response
+        .on_hover_cursor(egui::CursorIcon::PointingHand)
+        .clicked()
+    {
+        app.actions.push(Action::ShowArchived(true));
+    }
 }
 
 /// The row the secret code reveals: the only thing the search then shows.

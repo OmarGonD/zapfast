@@ -7373,6 +7373,42 @@ mod tests {
     }
 
     #[test]
+    fn archived_row_is_visible_above_chats_and_opens_the_folder() {
+        let mut app = app();
+        app.open_chat = None;
+        app.settings.sidebar_width = 280.0;
+        let ctx = egui::Context::default();
+        app.attach(&ctx);
+        render(&mut app, &ctx);
+        render(&mut app, &ctx);
+        let rect = ctx
+            .data(|data| data.get_temp::<egui::Rect>(egui::Id::new("archived-chip")))
+            .expect("archived entry is visible without scrolling the filters");
+        let first = app.visible_chats()[0].id.clone();
+        let chat_rect = ctx
+            .data(|data| data.get_temp::<egui::Rect>(crate::ui::chats::chat_row_id(&first)))
+            .unwrap();
+        assert!(rect.bottom() <= chat_rect.top());
+        let pos = rect.center();
+        let press = |pressed| egui::Event::PointerButton {
+            pos,
+            button: egui::PointerButton::Primary,
+            pressed,
+            modifiers: egui::Modifiers::NONE,
+        };
+        frame_with(
+            &mut app,
+            &ctx,
+            vec![egui::Event::PointerMoved(pos), press(true)],
+        );
+        frame_with(&mut app, &ctx, vec![press(false)]);
+        render(&mut app, &ctx);
+        assert!(app.show_archived);
+        assert!(!app.visible_chats().is_empty());
+        assert!(app.visible_chats().iter().all(|chat| chat.archived));
+    }
+
+    #[test]
     fn a_chat_clicked_in_the_unread_list_stays_there_once_read() {
         use crate::model::ChatFilter;
         let mut app = app();

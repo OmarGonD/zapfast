@@ -295,9 +295,9 @@ your phone's contacts if you chose that for the last contact you added. A card w
 
 The chips under the search bar narrow the list to **Unread**, **Private**
 (one-to-one chats), **Favorites** (in your phone's order), or **Groups**.
-Followed channels have their own **Channels** chip, and **Archived** opens the
-archived chats. A chip with unread chats shows how many it
-has. Click the active chip again, or **All**, to see every chat. The
+Followed channels have their own **Channels** chip. The **Archived** row above
+the chat list opens archived chats and shows their count. A chip with unread
+chats shows how many it has. Click the active chip again, or **All**, to see every chat. The
 filter applies only to this list: search and the archive still show everything,
 and it resets when ZapFast restarts.
 
