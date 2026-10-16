@@ -7373,6 +7373,48 @@ mod tests {
     }
 
     #[test]
+    fn archived_row_remains_available_during_locked_folder_search() {
+        let mut app = app();
+        apply_flags(&mut app, Some("locked-open"));
+        assert!(app.archived_count() > 0);
+        let ctx = egui::Context::default();
+        app.attach(&ctx);
+        render(&mut app, &ctx);
+        assert!(app.locked_folder_open());
+        app.search = "fixture search".into();
+        ctx.data_mut(|data| {
+            data.remove::<egui::Rect>(egui::Id::new("archived-chip"));
+        });
+        render(&mut app, &ctx);
+        render(&mut app, &ctx);
+        let rect = ctx
+            .data(|data| data.get_temp::<egui::Rect>(egui::Id::new("archived-chip")))
+            .expect("archive navigation remains visible inside the locked folder");
+        let pos = rect.center();
+        let press = |pressed| egui::Event::PointerButton {
+            pos,
+            button: egui::PointerButton::Primary,
+            pressed,
+            modifiers: egui::Modifiers::NONE,
+        };
+        frame_with(
+            &mut app,
+            &ctx,
+            vec![egui::Event::PointerMoved(pos), press(true)],
+        );
+        frame_with(&mut app, &ctx, vec![press(false)]);
+        render(&mut app, &ctx);
+        assert!(app.show_archived);
+        assert!(!app.locked_folder_open());
+        assert!(app.search.is_empty());
+        assert!(
+            app.visible_chats()
+                .iter()
+                .all(|chat| chat.archived && !chat.locked)
+        );
+    }
+
+    #[test]
     fn archived_row_is_visible_above_chats_and_opens_the_folder() {
         let mut app = app();
         app.open_chat = None;

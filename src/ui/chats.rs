@@ -486,6 +486,9 @@ fn list(app: &mut App, ui: &mut egui::Ui) {
     // Taken here so a send seen while the list is hidden cannot move it later.
     let to_top = std::mem::take(&mut app.scroll_chats_to_top);
     if app.locked_folder_open() {
+        if !app.show_archived && app.archived_count() > 0 {
+            archived_entry(app, ui);
+        }
         locked_list(app, ui);
         return;
     }
