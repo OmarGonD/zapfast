@@ -715,6 +715,12 @@ leaving the chat list in place. In a narrow window showing only the list,
 the notice appears below the list header. Retry and update actions stay
 available in the notice.
 
+You can paste a WhatsApp chat link into **New chat** or the search bar: a
+`wa.me`, `api.whatsapp.com`, `web.whatsapp.com/send` or `whatsapp://send` link
+with a phone number. **Open chat with** that number appears at the top; click it
+or press Enter. The link's `text=` template lands in the composer without being
+sent, and never replaces a draft you wrote.
+
 To message someone without saving their number, open **New chat**, choose
 **Add contact**, enter the number with its country code, leave the name blank,
 and choose **Message**. A leading `+`, spaces, hyphens and brackets are fine;

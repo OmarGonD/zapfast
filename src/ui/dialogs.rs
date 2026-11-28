@@ -511,7 +511,10 @@ fn new_chat(app: &mut App, ui: &mut egui::Ui) {
     let needle = crate::util::search_key(app.new_chat_search.trim());
     let contacts = contact_choices(app, &needle);
     let offer_self = app.offers_self(&needle);
-    if let Some(contact) = contacts
+    let link = crate::target::parse_link(&app.new_chat_search);
+    if let Some(request) = link.clone().filter(|_| open_first) {
+        super::chats::open_link(app, request);
+    } else if let Some(contact) = contacts
         .first()
         .filter(|_| open_first && !needle.is_empty())
     {
@@ -525,7 +528,9 @@ fn new_chat(app: &mut App, ui: &mut egui::Ui) {
     // The list is as tall as its rows, up to the space the dialog has, so a
     // search with few matches gives a short list and many give a full one.
     // Its height comes from this frame's rows, not last frame's size.
-    let listed = if contacts.is_empty() && !offer_self {
+    let listed = if link.is_some() {
+        1 + contacts.len() + usize::from(offer_self)
+    } else if contacts.is_empty() && !offer_self {
         1
     } else {
         contacts.len() + usize::from(offer_self)
@@ -540,6 +545,12 @@ fn new_chat(app: &mut App, ui: &mut egui::Ui) {
         .max_height(list_height)
         .auto_shrink([false, true])
         .show(ui, |ui| {
+            // A pasted link's chat is what was asked for, so it comes first.
+            if let Some(request) = &link
+                && super::chats::link_row(app, ui, request).clicked()
+            {
+                super::chats::open_link(app, request.clone());
+            }
             // New group and Add contact head the list, then "Message
             // yourself", as on the phone.
             let new_group = crate::i18n::gettext(app.locale, "New group");
@@ -553,7 +564,7 @@ fn new_chat(app: &mut App, ui: &mut egui::Ui) {
             if offer_self {
                 super::chats::self_row(app, ui);
             }
-            if contacts.is_empty() && !offer_self {
+            if contacts.is_empty() && !offer_self && link.is_none() {
                 // No row is drawn to forget the one scrolled into view last.
                 ui.ctx()
                     .data_mut(|data| data.remove::<String>(super::chats::revealed_row_id()));

@@ -21935,6 +21935,48 @@ mod tests {
         found
     }
 
+    /// A chat link pasted into New chat or the search bar offers its chat,
+    /// and Enter opens it with the link's text unsent in the composer.
+    #[test]
+    fn enter_on_a_pasted_chat_link_opens_its_chat() {
+        const LINK: &str = "https://web.whatsapp.com/send?phone=15550100123&text=Hello%20there";
+        const CHAT: &str = "15550100123@s.whatsapp.net";
+        for (field, dialog) in [
+            ("chat-search", None),
+            ("new-chat-search", Some(Dialog::NewChat)),
+        ] {
+            let mut app = app();
+            if dialog.is_none() {
+                app.search = LINK.into();
+            } else {
+                app.new_chat_search = LINK.into();
+            }
+            app.dialog = dialog;
+            let ctx = egui::Context::default();
+            ctx.enable_accesskit();
+            app.attach(&ctx);
+            for _ in 0..3 {
+                frame_sized(&mut app, &ctx, 1180.0, Vec::new());
+            }
+            ctx.memory_mut(|memory| memory.request_focus(egui::Id::new(field)));
+            frame_sized(&mut app, &ctx, 1180.0, Vec::new());
+            let enter = egui::Event::Key {
+                key: egui::Key::Enter,
+                physical_key: None,
+                pressed: true,
+                repeat: false,
+                modifiers: egui::Modifiers::NONE,
+            };
+            frame_sized(&mut app, &ctx, 1180.0, vec![enter]);
+            for _ in 0..3 {
+                frame_sized(&mut app, &ctx, 1180.0, Vec::new());
+            }
+            assert_eq!(app.open_chat.as_deref(), Some(CHAT), "{field}");
+            assert_eq!(app.composer, "Hello there", "{field}");
+            assert_eq!(app.dialog, None, "{field}");
+        }
+    }
+
     /// The chat list's search field centres a capital's ink, from its top to
     /// the baseline, on the field and its icons at every scale; the hint sits
     /// on the same line, and the clear button's cross on the same centre.

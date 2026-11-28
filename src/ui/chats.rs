@@ -89,6 +89,17 @@ fn search_keyboard(app: &mut App, ui: &egui::Ui) {
     if !down && !up && !enter {
         return;
     }
+    // A pasted link heads the results, so Enter opens it unless the arrows
+    // have picked a chat below it.
+    if enter
+        && app.search_selected.is_none()
+        && let Some(request) = crate::target::parse_link(&app.search)
+    {
+        ui.memory_mut(|memory| memory.surrender_focus(field));
+        app.actions.push(Action::Search(String::new()));
+        open_link(app, request);
+        return;
+    }
     let chats: Vec<_> = app
         .visible_chats()
         .into_iter()
@@ -1194,7 +1205,9 @@ fn results(app: &mut App, ui: &mut egui::Ui) {
         && !chats
             .iter()
             .any(|chat| app.me.as_deref() == Some(chat.id.as_str()));
-    if chats.is_empty() && hits.is_empty() && contacts.is_empty() && !offer_self {
+    // The locked folder's search field takes its secret code, not a link.
+    let link = crate::target::parse_link(&app.search).filter(|_| !app.locked_folder_open());
+    if link.is_none() && chats.is_empty() && hits.is_empty() && contacts.is_empty() && !offer_self {
         widgets::empty_state(
             ui,
             &palette,
@@ -1209,6 +1222,12 @@ fn results(app: &mut App, ui: &mut egui::Ui) {
         .id_salt("search-results")
         .auto_shrink([false, false])
         .show(ui, |ui| {
+            if let Some(request) = link
+                && link_row(app, ui, &request).clicked()
+            {
+                app.actions.push(Action::Search(String::new()));
+                open_link(app, request);
+            }
             if !chats.is_empty() {
                 section(ui, &palette, "Chats");
                 for chat in &chats {
@@ -1272,6 +1291,34 @@ fn results(app: &mut App, ui: &mut egui::Ui) {
             }
             ui.add_space(8.0);
         });
+}
+
+/// The row offering the chat a pasted link names.
+pub(super) fn link_row(
+    app: &mut App,
+    ui: &mut egui::Ui,
+    request: &crate::target::Request,
+) -> egui::Response {
+    let label = crate::i18n::gettext(app.locale, "Open chat with {number}")
+        .replace("{number}", &request.display_name());
+    action_row(app, ui, Icon::MessageCircle, &label)
+}
+
+/// Opens the chat a pasted link names, its template unsent in the composer,
+/// as the same link handed to ZapFast from outside does.
+pub(super) fn open_link(app: &mut App, request: crate::target::Request) {
+    let name = app.display_name(&request.chat);
+    app.actions.push(Action::StartChat {
+        id: request.chat.clone(),
+        name,
+        dismiss_dialog: true,
+    });
+    if let Some(text) = request.text {
+        app.actions.push(Action::PrefillComposer {
+            chat: request.chat,
+            text,
+        });
+    }
 }
 
 /// Whether a row of `height` about to be laid out at the cursor lies

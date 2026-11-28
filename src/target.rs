@@ -85,6 +85,26 @@ pub fn parse(target: &str) -> Option<Request> {
     })
 }
 
+/// Reads `text` as a chat link pasted into a search field.
+///
+/// Only a link counts: a `whatsapp:` URI, a web link [`parse`] accepts, or a
+/// `wa.me/` link without its scheme. A number on its own is left to the
+/// search, which is what someone typing digits is asking for.
+pub fn parse_link(text: &str) -> Option<Request> {
+    let lower = text.trim().to_ascii_lowercase();
+    [
+        "whatsapp:",
+        "whatsapp-send:",
+        "https://",
+        "http://",
+        "wa.me/",
+    ]
+    .iter()
+    .any(|start| lower.starts_with(start))
+    .then(|| parse(text))
+    .flatten()
+}
+
 /// The number `target` names, read where its own shape keeps it.
 ///
 /// The shape decides where to look: a `wa.me` link keeps its number in the
@@ -255,6 +275,38 @@ mod tests {
             "  20123456789  ",
         ] {
             assert_eq!(chat_of_argument(target), CHAT, "{target}");
+        }
+    }
+
+    #[test]
+    fn a_pasted_link_is_read_with_its_template() {
+        for link in [
+            "https://wa.me/20123456789?text=Hello%20there",
+            "wa.me/20123456789?text=Hello%20there",
+            "  https://web.whatsapp.com/send?phone=20123456789&text=Hello%20there  ",
+            "https://api.whatsapp.com/send?phone=20123456789&text=Hello%20there",
+            "whatsapp://send?phone=20123456789&text=Hello%20there",
+        ] {
+            let request = parse_link(link).expect(link);
+            assert_eq!(request.chat, CHAT, "{link}");
+            assert_eq!(request.text.as_deref(), Some("Hello there"), "{link}");
+        }
+    }
+
+    /// Digits typed in a search field are a search, and a link to somewhere
+    /// else names no chat.
+    #[test]
+    fn what_is_not_a_chat_link_stays_a_search() {
+        for text in [
+            "",
+            "20123456789",
+            "+20 123 456 789",
+            "wa.me",
+            "https://example.com/send?phone=20123456789",
+            "https://chat.whatsapp.com/AbCdEf1234567890XyZ",
+            "see https://wa.me/20123456789",
+        ] {
+            assert_eq!(parse_link(text), None, "{text}");
         }
     }
 
