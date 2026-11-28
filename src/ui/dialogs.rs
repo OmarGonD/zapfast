@@ -1993,8 +1993,8 @@ fn new_contact(app: &mut App, ui: &mut egui::Ui) {
         .horizontal(|ui| {
             let half = (ui.available_width() - ui.spacing().item_spacing.x) / 2.0 - 24.0;
             let format = egui::TextFormat::simple(theme::regular(16.0), palette.text);
-            let mut layouter = |ui: &egui::Ui, text: &dyn egui::TextBuffer, wrap: f32| {
-                crate::bidi::layout_field(ui, text.as_str(), &format, wrap)
+            let mut layouter = |ui: &egui::Ui, text: &dyn egui::TextBuffer, _: f32| {
+                crate::bidi::layout_field(ui, text.as_str(), &format)
             };
             let first_align = if crate::bidi::base_rtl(&app.new_contact_name) {
                 Align::RIGHT

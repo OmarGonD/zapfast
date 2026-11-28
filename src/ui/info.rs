@@ -443,8 +443,8 @@ fn identity(app: &mut App, ui: &mut egui::Ui, shown: &Shown, overlay: bool) {
                 ui.add_space((ui.available_width() - 288.0).max(0.0) / 2.0);
                 let name_field = |ui: &mut egui::Ui, buffer: &mut String, salt: &str, hint| {
                     let format = egui::TextFormat::simple(theme::semibold(15.0), palette.text);
-                    let mut layouter = |ui: &egui::Ui, text: &dyn egui::TextBuffer, wrap: f32| {
-                        crate::bidi::layout_field(ui, text.as_str(), &format, wrap)
+                    let mut layouter = |ui: &egui::Ui, text: &dyn egui::TextBuffer, _: f32| {
+                        crate::bidi::layout_field(ui, text.as_str(), &format)
                     };
                     let align = if crate::bidi::base_rtl(buffer) {
                         Align::RIGHT
@@ -2299,8 +2299,8 @@ fn group_name_field(app: &App, ui: &mut egui::Ui, draft: &mut String) -> Option<
         let width = 240.0_f32.min(ui.available_width() - buttons);
         ui.add_space(((ui.available_width() - width - buttons) / 2.0).max(0.0));
         let format = egui::TextFormat::simple(theme::semibold(15.0), palette.text);
-        let mut layouter = |ui: &egui::Ui, text: &dyn egui::TextBuffer, wrap: f32| {
-            crate::bidi::layout_field(ui, text.as_str(), &format, wrap)
+        let mut layouter = |ui: &egui::Ui, text: &dyn egui::TextBuffer, _: f32| {
+            crate::bidi::layout_field(ui, text.as_str(), &format)
         };
         let align = if crate::bidi::base_rtl(draft) {
             Align::RIGHT

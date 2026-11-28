@@ -340,8 +340,8 @@ fn naming(app: &mut App, ui: &mut egui::Ui) {
 
     let hint = crate::i18n::gettext(app.locale, "Group name (required)");
     let format = egui::TextFormat::simple(theme::regular(16.0), palette.text);
-    let mut layouter = |ui: &egui::Ui, text: &dyn egui::TextBuffer, wrap: f32| {
-        crate::bidi::layout_field(ui, text.as_str(), &format, wrap)
+    let mut layouter = |ui: &egui::Ui, text: &dyn egui::TextBuffer, _: f32| {
+        crate::bidi::layout_field(ui, text.as_str(), &format)
     };
     let mut name = draft.name.clone();
     let align = if crate::bidi::base_rtl(&name) {

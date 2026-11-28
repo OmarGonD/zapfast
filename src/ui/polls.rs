@@ -41,8 +41,8 @@ pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
             palette.secondary,
         );
         let format = egui::TextFormat::simple(theme::regular(14.0), palette.text);
-        let mut layouter = |ui: &egui::Ui, text: &dyn egui::TextBuffer, wrap: f32| {
-            crate::bidi::layout_field(ui, text.as_str(), &format, wrap)
+        let mut layouter = |ui: &egui::Ui, text: &dyn egui::TextBuffer, _: f32| {
+            crate::bidi::layout_field(ui, text.as_str(), &format)
         };
         let question_align = if crate::bidi::base_rtl(&app.poll_draft.question) {
             Align::RIGHT
@@ -75,10 +75,9 @@ pub fn create(app: &mut App, ui: &mut egui::Ui, chat: &str) {
             .max_height(height)
             .show(ui, |ui| {
                 let answer_format = egui::TextFormat::simple(theme::regular(14.0), palette.text);
-                let mut answer_layouter =
-                    |ui: &egui::Ui, text: &dyn egui::TextBuffer, wrap: f32| {
-                        crate::bidi::layout_field(ui, text.as_str(), &answer_format, wrap)
-                    };
+                let mut answer_layouter = |ui: &egui::Ui, text: &dyn egui::TextBuffer, _: f32| {
+                    crate::bidi::layout_field(ui, text.as_str(), &answer_format)
+                };
                 for (index, answer) in app.poll_draft.options.iter_mut().enumerate() {
                     ui.horizontal(|ui| {
                         let width = (ui.available_width() - 32.0).max(100.0);

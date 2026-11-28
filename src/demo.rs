@@ -22041,6 +22041,38 @@ mod tests {
         }
     }
 
+    /// A pasted link is longer than a search field. It stays on one line,
+    /// which the field scrolls, instead of wrapping over what is under it.
+    #[test]
+    fn long_text_in_a_search_field_stays_on_one_line() {
+        const LINK: &str = "https://web.whatsapp.com/send?phone=15550100123&text=\
+                            Hello%20there%2C%20I%20would%20like%20to%20know%20more";
+        for (field, dialog) in [
+            ("chat-search", None),
+            ("new-chat-search", Some(Dialog::NewChat)),
+        ] {
+            let height = |text: &str| {
+                let mut app = app();
+                app.search = if dialog.is_none() { text } else { "" }.into();
+                app.new_chat_search = text.into();
+                app.dialog = dialog.clone();
+                let ctx = egui::Context::default();
+                app.attach(&ctx);
+                for _ in 0..4 {
+                    frame_sized(&mut app, &ctx, 1180.0, Vec::new());
+                }
+                ctx.data(|data| {
+                    data.get_temp::<egui::Rect>(crate::ui::widgets::search_galley_id(
+                        egui::Id::new(field),
+                    ))
+                })
+                .expect("the field publishes its text's place")
+                .height()
+            };
+            assert_eq!(height(LINK), height("H"), "{field} wrapped its text");
+        }
+    }
+
     /// A call entry draws as WhatsApp's: the glyph's disc centred on the
     /// title and detail together, the detail under the title at its start,
     /// and the time on the detail's line at the bubble's end, on both sides

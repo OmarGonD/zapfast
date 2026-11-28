@@ -1035,7 +1035,7 @@ pub fn search_field(
     // has more room above the capitals than below the descenders; centring
     // capitals and descenders together lifted a word without descenders, the
     // usual case, above it.
-    let probe = bidi::layout_field(ui, "H", &format, f32::INFINITY);
+    let probe = bidi::layout_field(ui, "H", &format);
     let line_height = probe.size().y;
     let middle = cap_middle(&probe).unwrap_or(line_height / 2.0);
     let top = fastframe_text::snap_to_pixels(rect.center().y - middle, ui.ctx().pixels_per_point());
@@ -1058,8 +1058,8 @@ pub fn search_field(
             .max_rect(field_rect)
             .layout(Layout::left_to_right(Align::Min)),
     );
-    let mut layouter = |ui: &egui::Ui, buffer: &dyn egui::TextBuffer, wrap: f32| {
-        bidi::layout_field(ui, buffer.as_str(), &format, wrap)
+    let mut layouter = |ui: &egui::Ui, buffer: &dyn egui::TextBuffer, _: f32| {
+        bidi::layout_field(ui, buffer.as_str(), &format)
     };
     let align = if bidi::base_rtl(text) {
         Align::RIGHT

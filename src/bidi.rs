@@ -53,12 +53,15 @@ pub fn layout_editor(
 }
 
 /// Single-line field galley. Emoji stay visible; the logical buffer is unchanged.
-pub fn layout_field(ui: &egui::Ui, text: &str, format: &TextFormat, wrap: f32) -> Arc<Galley> {
+///
+/// It never wraps: egui hands a single-line editor's layouter the field's
+/// width, but expects one line that it clips and scrolls to the caret.
+pub fn layout_field(ui: &egui::Ui, text: &str, format: &TextFormat) -> Arc<Galley> {
     let mut format = format.clone();
     let line_height = ui.fonts_mut(|fonts| fonts.row_height(&format.font_id));
     format.line_height = Some(line_height);
     let mut job = egui::text::LayoutJob::single_section(text.to_owned(), format);
-    job.wrap.max_width = wrap;
+    job.wrap.max_width = f32::INFINITY;
     job.break_on_newline = false;
     job.keep_trailing_whitespace = true;
     let mut galley = ui.fonts_mut(|fonts| fonts.layout_job(job));
